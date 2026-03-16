@@ -1,0 +1,5 @@
+{
+  "name": "o2-sales-toolkit-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for O2 Sales Toolkit — no external dependencies (uses Node 18 native fetch)"
+}

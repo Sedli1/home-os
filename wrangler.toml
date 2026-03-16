@@ -1,0 +1,11 @@
+name = "o2-toolkit"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+# Cloudflare Pages config
+# Deploy: wrangler pages deploy --project-name o2-toolkit
+# Dev:    wrangler pages dev . --compatibility-date 2024-09-23
+
+# Environment variables nastavuj v Cloudflare Dashboard:
+# Pages → o2-toolkit → Settings → Environment variables
+# ANTHROPIC_API_KEY = "sk-ant-..."

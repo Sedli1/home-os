@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Splátkový kalendář</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f1f5f9;
+      --surface:   #ffffff;
+      --border:    #e2e8f0;
+      --primary:   #2563eb;
+      --primary-h: #1d4ed8;
+      --danger:    #dc2626;
+      --success:   #16a34a;
+      --text:      #0f172a;
+      --muted:     #64748b;
+      --radius:    10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem 1rem 4rem;
+    }
+
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: .25rem; }
+    .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 1.5rem; }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-title { font-weight: 600; font-size: 1rem; margin-bottom: 1rem; color: var(--primary); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem 1.25rem; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: .8rem; font-weight: 500; color: var(--muted); margin-bottom: .3rem; }
+    input, select {
+      width: 100%;
+      padding: .5rem .75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .9rem;
+      color: var(--text);
+      background: var(--surface);
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1.1rem;
+      border: none; border-radius: 6px;
+      font-size: .875rem; font-weight: 600; cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-primary  { background: var(--primary);  color: #fff; }
+    .btn-primary:hover  { background: var(--primary-h); }
+    .btn-danger   { background: var(--danger);   color: #fff; }
+    .btn-danger:hover   { opacity: .85; }
+    .btn-success  { background: var(--success);  color: #fff; }
+    .btn-success:hover  { opacity: .85; }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover    { background: var(--bg); }
+    .btn-sm { padding: .35rem .75rem; font-size: .8rem; }
+
+    /* Summary bar */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1rem;
+      text-align: center;
+    }
+    .stat-label { font-size: .75rem; color: var(--muted); margin-bottom: .2rem; }
+    .stat-value { font-size: 1.15rem; font-weight: 700; }
+    .stat-value.red  { color: var(--danger); }
+    .stat-value.blue { color: var(--primary); }
+    .stat-value.grn  { color: var(--success); }
+
+    /* Extraordinary payments */
+    .extra-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: .6rem;
+      align-items: end;
+      margin-bottom: .5rem;
+    }
+    .extra-row .btn { white-space: nowrap; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      background: #f8fafc;
+      padding: .5rem .75rem;
+      text-align: right;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th:first-child { text-align: center; }
+    thead th:nth-child(2) { text-align: left; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr.extra-row-highlight { background: #fffbeb; }
+    tbody tr.paid { opacity: .5; }
+    tbody td { padding: .45rem .75rem; text-align: right; white-space: nowrap; }
+    tbody td:first-child { text-align: center; color: var(--muted); }
+    tbody td:nth-child(2) { text-align: left; }
+    td.extra-badge { color: #92400e; font-weight: 600; }
+    tfoot td { padding: .5rem .75rem; font-weight: 700; text-align: right; background: #f8fafc; border-top: 2px solid var(--border); }
+
+    .progress-wrap { margin-top: .75rem; }
+    .progress-label { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-bottom: .3rem; }
+    .progress-bg { height: 10px; border-radius: 99px; background: var(--border); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width .4s; }
+
+    .actions-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; }
+
+    .badge-paid { display: inline-block; background: #dcfce7; color: #16a34a; border-radius: 4px; padding: .1rem .45rem; font-size: .72rem; font-weight: 600; }
+    .badge-next { display: inline-block; background: #dbeafe; color: #2563eb; border-radius: 4px; padding: .1rem .45rem; font-size: .72rem; font-weight: 600; }
+
+    #noLoans { color: var(--muted); text-align: center; padding: 2rem; font-size: .9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>💳 Splátkový kalendář</h1>
+  <p class="subtitle">Osobní přehled úvěrů, splátek a mimořádných plateb — odděleno od pracovních nástrojů</p>
+
+  <!-- ═══ FORM: Nový úvěr ═══ -->
+  <div class="card">
+    <div class="card-title">➕ Přidat úvěr / půjčku</div>
+    <div class="grid-3">
+      <div>
+        <label>Název úvěru</label>
+        <input type="text" id="loanName" placeholder="např. Hypotéka, Auto, Spotřebák…">
+      </div>
+      <div>
+        <label>Celková výše (Kč)</label>
+        <input type="number" id="loanAmount" placeholder="1 500 000" min="0" step="1000">
+      </div>
+      <div>
+        <label>Zbývající dluh dnes (Kč)</label>
+        <input type="number" id="loanRemaining" placeholder="1 200 000" min="0" step="1000">
+      </div>
+      <div>
+        <label>Měsíční splátka (Kč)</label>
+        <input type="number" id="loanPayment" placeholder="9 500" min="0" step="100">
+      </div>
+      <div>
+        <label>Datum první / příští splátky</label>
+        <input type="date" id="loanStartDate">
+      </div>
+      <div>
+        <label>Interval splátek</label>
+        <select id="loanInterval">
+          <option value="1">Měsíčně</option>
+          <option value="3">Čtvrtletně</option>
+          <option value="6">Pololetně</option>
+          <option value="12">Ročně</option>
+        </select>
+      </div>
+      <div>
+        <label>Úroková sazba p.a. (%)</label>
+        <input type="number" id="loanRate" placeholder="4.5" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-primary" onclick="addLoan()">✅ Přidat úvěr</button>
+      <button class="btn btn-ghost" onclick="clearForm()">✕ Vymazat</button>
+    </div>
+  </div>
+
+  <!-- ═══ LOANS LIST ═══ -->
+  <div id="loansContainer">
+    <div id="noLoans">Zatím žádný úvěr. Přidejte první výše ↑</div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+const STORAGE_KEY = 'splatky_v1';
+
+/* ─── STATE ─── */
+let loans = loadState();
+renderAll();
+
+/* ─── STORAGE ─── */
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(loans)); }
+
+/* ─── FORM ─── */
+function addLoan() {
+  const name      = document.getElementById('loanName').value.trim();
+  const amount    = parseFloat(document.getElementById('loanAmount').value) || 0;
+  const remaining = parseFloat(document.getElementById('loanRemaining').value) || amount;
+  const payment   = parseFloat(document.getElementById('loanPayment').value) || 0;
+  const startDate = document.getElementById('loanStartDate').value;
+  const interval  = parseInt(document.getElementById('loanInterval').value) || 1;
+  const rate      = parseFloat(document.getElementById('loanRate').value) || 0;
+
+  if (!name || !payment || !startDate) {
+    alert('Vyplňte alespoň: Název, Měsíční splátku a Datum příští splátky.');
+    return;
+  }
+
+  loans.push({
+    id:        Date.now(),
+    name,
+    amount:    amount || remaining,
+    remaining,
+    payment,
+    startDate,
+    interval,
+    rate,
+    extras:    [],  // { date: 'YYYY-MM-DD', amount: number, note: string }
+    paidCount: 0,
+  });
+  saveState();
+  renderAll();
+  clearForm();
+}
+
+function clearForm() {
+  ['loanName','loanAmount','loanRemaining','loanPayment','loanStartDate','loanRate'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('loanInterval').value = '1';
+}
+
+function deleteLoan(id) {
+  if (!confirm('Opravdu smazat tento úvěr?')) return;
+  loans = loans.filter(l => l.id !== id);
+  saveState();
+  renderAll();
+}
+
+/* ─── EXTRA PAYMENT ─── */
+function addExtra(id) {
+  const loan = loans.find(l => l.id === id);
+  if (!loan) return;
+  const dateEl   = document.getElementById(`extra-date-${id}`);
+  const amountEl = document.getElementById(`extra-amount-${id}`);
+  const noteEl   = document.getElementById(`extra-note-${id}`);
+  const date   = dateEl.value;
+  const amount = parseFloat(amountEl.value);
+  const note   = noteEl?.value?.trim() || 'Mimořádná splátka';
+  if (!date || !amount || amount <= 0) { alert('Zadejte datum a částku mimořádné splátky.'); return; }
+  loan.extras.push({ date, amount, note });
+  loan.extras.sort((a, b) => a.date.localeCompare(b.date));
+  saveState();
+  renderAll();
+}
+
+function removeExtra(loanId, idx) {
+  const loan = loans.find(l => l.id === loanId);
+  if (!loan) return;
+  loan.extras.splice(idx, 1);
+  saveState();
+  renderAll();
+}
+
+/* ─── SCHEDULE CALCULATION ─── */
+function buildSchedule(loan) {
+  const schedule = [];
+  const monthlyRate = loan.rate / 100 / 12;
+  let remaining = loan.remaining;
+  let date = new Date(loan.startDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  let extraIdx = 0;
+  const sortedExtras = [...loan.extras].sort((a,b) => a.date.localeCompare(b.date));
+  let instNum = 1;
+
+  while (remaining > 0.01) {
+    // Insert any extras before this date
+    while (extraIdx < sortedExtras.length) {
+      const ex = sortedExtras[extraIdx];
+      const exDate = new Date(ex.date + 'T00:00:00');
+      if (exDate <= date) {
+        remaining = Math.max(0, remaining - ex.amount);
+        schedule.push({
+          num: '✦',
+          date: fmtDate(exDate),
+          dateISO: ex.date,
+          principal: ex.amount,
+          interest: 0,
+          total: ex.amount,
+          remaining,
+          isExtra: true,
+          note: ex.note,
+          paid: exDate < today,
+          extraGlobalIdx: extraIdx,
+        });
+        extraIdx++;
+        if (remaining <= 0.01) break;
+      } else break;
+    }
+    if (remaining <= 0.01) break;
+
+    // Regular payment
+    const interest = monthlyRate > 0 ? remaining * monthlyRate * loan.interval : 0;
+    const principal = Math.min(loan.payment - interest, remaining);
+    const actualPayment = Math.min(loan.payment, remaining + interest);
+    remaining = Math.max(0, remaining - principal);
+    const isPaid = date < today;
+
+    schedule.push({
+      num: instNum++,
+      date: fmtDate(date),
+      dateISO: date.toISOString().slice(0, 10),
+      principal: Math.max(0, principal),
+      interest,
+      total: actualPayment,
+      remaining,
+      isExtra: false,
+      paid: isPaid,
+    });
+
+    if (remaining <= 0.01) break;
+
+    // Advance date
+    const next = new Date(date);
+    next.setMonth(next.getMonth() + loan.interval);
+    date = next;
+
+    // Safety: max 600 instalments
+    if (instNum > 600) { schedule.push({ num: '…', date: '–', total: 0, remaining, isExtra: false, paid: false, overflow: true }); break; }
+  }
+
+  return schedule;
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function fmtCZK(n) {
+  return Math.round(n).toLocaleString('cs-CZ') + ' Kč';
+}
+
+/* ─── RENDER ─── */
+function renderAll() {
+  const container = document.getElementById('loansContainer');
+  document.getElementById('noLoans').style.display = loans.length ? 'none' : 'block';
+
+  // Remove old loan cards (keep noLoans div)
+  container.querySelectorAll('.loan-card').forEach(el => el.remove());
+
+  loans.forEach(loan => {
+    const schedule = buildSchedule(loan);
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    const totalInterest = schedule.filter(r => !r.isExtra && !r.overflow).reduce((s, r) => s + r.interest, 0);
+    const totalPaid     = schedule.filter(r => r.paid).reduce((s, r) => s + r.total, 0);
+    const totalLeft     = schedule.filter(r => !r.paid).reduce((s, r) => s + r.total, 0);
+    const nextRow       = schedule.find(r => !r.paid && !r.isExtra);
+    const paidCount     = schedule.filter(r => r.paid && !r.isExtra).length;
+    const totalCount    = schedule.filter(r => !r.isExtra && !r.overflow).length;
+    const pctPaid       = loan.amount > 0 ? Math.round((1 - loan.remaining / loan.amount) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'card loan-card';
+    card.id = `loan-${loan.id}`;
+
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <div style="font-weight:700;font-size:1.05rem">🏦 ${esc(loan.name)}</div>
+        <button class="btn btn-danger btn-sm" onclick="deleteLoan(${loan.id})">🗑 Smazat</button>
+      </div>
+
+      <div class="summary-bar">
+        <div class="stat-box">
+          <div class="stat-label">Zbývá splatit</div>
+          <div class="stat-value blue">${fmtCZK(loan.remaining)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Splátka</div>
+          <div class="stat-value">${fmtCZK(loan.payment)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Zbývá splátek</div>
+          <div class="stat-value">${totalCount - paidCount} z ${totalCount}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Celkem úroky</div>
+          <div class="stat-value red">${fmtCZK(totalInterest)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Celkem doplatit</div>
+          <div class="stat-value red">${fmtCZK(totalLeft)}</div>
+        </div>
+        ${nextRow ? `<div class="stat-box">
+          <div class="stat-label">Příští splátka</div>
+          <div class="stat-value blue" style="font-size:.9rem">${nextRow.date}</div>
+        </div>` : '<div class="stat-box"><div class="stat-label">Stav</div><div class="stat-value grn">✅ Splaceno</div></div>'}
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Splaceno ${pctPaid}%</span>
+          <span>${fmtCZK(loan.amount - loan.remaining)} / ${fmtCZK(loan.amount)}</span>
+        </div>
+        <div class="progress-bg"><div class="progress-fill" style="width:${pctPaid}%"></div></div>
+      </div>
+
+      <!-- Mimořádná splátka -->
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem;color:var(--muted)">💰 Přidat mimořádnou splátku</div>
+        <div class="extra-row">
+          <div><label>Datum</label><input type="date" id="extra-date-${loan.id}"></div>
+          <div><label>Částka (Kč)</label><input type="number" id="extra-amount-${loan.id}" placeholder="50 000" min="0"></div>
+          <div><label>Poznámka</label><input type="text" id="extra-note-${loan.id}" placeholder="Mimořádná splátka"></div>
+          <button class="btn btn-success btn-sm" onclick="addExtra(${loan.id})">+ Přidat</button>
+        </div>
+        ${loan.extras.length ? `
+        <div style="font-size:.8rem;color:var(--muted);margin-top:.25rem">
+          ${loan.extras.map((ex, i) => `
+            <span style="display:inline-flex;align-items:center;gap:.3rem;margin:.15rem .3rem .15rem 0;background:#fffbeb;border:1px solid #fde68a;padding:.2rem .5rem;border-radius:4px">
+              📅 ${ex.date} · <strong>${fmtCZK(ex.amount)}</strong> · ${esc(ex.note)}
+              <button onclick="removeExtra(${loan.id},${i})" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:.9rem;padding:0 .1rem">✕</button>
+            </span>`).join('')}
+        </div>` : ''}
+      </div>
+
+      <!-- Kalendář splátek (toggle) -->
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost btn-sm" onclick="toggleTable('tbl-${loan.id}', this)">📋 Zobrazit kalendář splátek (${totalCount})</button>
+        <div id="tbl-${loan.id}" style="display:none;margin-top:.75rem">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Datum</th><th>Splátka celkem</th><th>Jistina</th><th>Úrok</th><th>Zbývá</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${schedule.map(r => r.overflow ? `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:.75rem">… plán zkrácen (max 600 splátek)</td></tr>` : `
+                <tr class="${r.paid ? 'paid' : ''} ${r.isExtra ? 'extra-row-highlight' : ''}">
+                  <td>${r.num}</td>
+                  <td>${r.date}${r.paid ? ' <span class="badge-paid">zaplaceno</span>' : ''}${!r.paid && !r.isExtra && r === nextRow ? ' <span class="badge-next">příští</span>' : ''}</td>
+                  <td><strong>${fmtCZK(r.total)}</strong></td>
+                  <td>${fmtCZK(r.principal)}</td>
+                  <td style="color:var(--danger)">${r.interest > 0 ? fmtCZK(r.interest) : '–'}</td>
+                  <td>${fmtCZK(r.remaining)}</td>
+                  <td>${r.isExtra ? '<span class="extra-badge">✦ mimo</span>' : ''}</td>
+                </tr>`).join('')}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="2">Celkem</td>
+                  <td>${fmtCZK(schedule.reduce((s,r)=>s+r.total,0))}</td>
+                  <td>${fmtCZK(schedule.reduce((s,r)=>s+r.principal,0))}</td>
+                  <td style="color:var(--danger)">${fmtCZK(totalInterest)}</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function toggleTable(id, btn) {
+  const el = document.getElementById(id);
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? 'block' : 'none';
+  btn.textContent = hidden ? btn.textContent.replace('Zobrazit', 'Skrýt') : btn.textContent.replace('Skrýt', 'Zobrazit');
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Set default date to today
+document.getElementById('loanStartDate').valueAsDate = new Date();
+</script>
+</body>
+</html>

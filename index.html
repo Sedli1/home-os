@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O2 Sales Toolkit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Mobile Header -->
+<header class="mobile-header" id="mobileHeader">
+  <button class="hamburger" id="hamburgerBtn" aria-label="Otevřít menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="mobile-logo">
+    <span class="logo-bubble">O2</span>
+    <span class="logo-text">Sales Toolkit</span>
+  </div>
+  <button class="mobile-search-btn" id="mobileSearchBtn" aria-label="Hledat">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  </button>
+</header>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="logo-bubble">O2</span>
+      <div>
+        <div class="sidebar-title">Sales Toolkit</div>
+        <div class="sidebar-version">v1.0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-search">
+    <button class="search-trigger" id="sidebarSearchBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span>Hledat...</span>
+      <kbd>Ctrl+K</kbd>
+    </button>
+  </div>
+
+  <ul class="nav-links">
+    <li>
+      <a href="#dashboard" class="nav-link active" data-page="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <a href="#email" class="nav-link" data-page="email">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        AI Email generátor
+      </a>
+    </li>
+    <li>
+      <a href="#tickets" class="nav-link" data-page="tickets">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+        Lístky O2 Arena
+      </a>
+    </li>
+    <li>
+      <a href="#objections" class="nav-link" data-page="objections">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Námitky
+      </a>
+    </li>
+    <li>
+      <a href="#sfa" class="nav-link" data-page="sfa">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        SFA generátor
+      </a>
+    </li>
+    <li>
+      <a href="#cowork" class="nav-link" data-page="cowork">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
+        Claude Cowork
+      </a>
+    </li>
+  </ul>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">JS</div>
+    <div class="user-info">
+      <div class="user-name" id="userName">Jakub Sedláček</div>
+      <div class="user-role">Account Manager · O2</div>
+    </div>
+  </div>
+</nav>
+
+<!-- Nav Overlay (mobile) -->
+<div class="nav-overlay" id="navOverlay"></div>
+
+<!-- Main Content -->
+<main class="main-content" id="mainContent">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PAGE: DASHBOARD                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dobrý den, <span id="dashboardName">Jakub</span>! 👋</h1>
+        <p class="page-subtitle" id="dashboardDate"></p>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-sm btn-secondary" id="refreshDashboard">↻ Obnovit</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid kpi-grid-3">
+      <div class="kpi-card" data-color="purple">
+        <div class="kpi-icon">🎟️</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpiTickets">–</div>
+          <div class="kpi-label">Lístky v historii</div>
+        </div>
+      </div>
+      <div class="kpi-card" data-color="orange">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpiOpportunities">–</div>
+          <div class="kpi-label">Aktivní příležitosti</div>
+        </div>
+        <button class="kpi-edit-btn" data-kpi="opportunities" title="Upravit">✎</button>
+      </div>
+      <div class="kpi-card kpi-card-link" data-color="blue" id="kpiSFACard" title="Otevřít SFA generátor" style="cursor:pointer">
+        <div class="kpi-icon">🗒️</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpiSFA">–</div>
+          <div class="kpi-label">Zápisů vygenerováno</div>
+          <div class="kpi-sub" id="kpiSFASub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="quick-action-btn" data-page="tickets" data-action-tab="tickets-nominations">📝 Nová nominace</button>
+      <button class="quick-action-btn" data-page="tickets" data-action-tab="tickets-table" id="quickUploadBtn">📎 Nahrát Excel</button>
+      <button class="quick-action-btn" data-page="tickets" data-action-invite="1">✉️ Generovat pozvánku</button>
+      <button class="quick-action-btn" data-page="sfa" id="quickSFABtn">🗒️ Nová schůzka SFA</button>
+    </div>
+
+    <div class="dashboard-grid">
+      <div id="dashOverdueBanner" class="hidden"></div>
+      <div class="card focus-card">
+        <div class="card-header">
+          <h2 class="card-title">🎯 Focus List</h2>
+          <button class="btn btn-sm btn-primary" id="addFocusBtn">+ Přidat</button>
+        </div>
+        <div id="focusList" class="focus-list">
+          <div class="empty-state-small">Žádné priority. Klikněte + Přidat.</div>
+        </div>
+      </div>
+
+      <div class="card tips-card">
+        <div class="card-header">
+          <h2 class="card-title">💡 Tipy dne</h2>
+        </div>
+        <div id="tipsList" class="tips-list"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PAGE: EMAIL GENERATOR                        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-email" class="page">
+    <div class="page-header">
+      <h1 class="page-title">✉️ AI Email generátor</h1>
+    </div>
+
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab-group="email" data-target="email-gen">✉️ Email generátor</button>
+      <button class="tab-btn" data-tab-group="email" data-target="meeting-notes">📝 Zápis ze schůzky</button>
+    </div>
+
+    <!-- Email Generator Tab -->
+    <div id="tab-email-gen" class="tab-pane active">
+      <div class="two-col-layout">
+        <div class="form-panel card">
+          <div class="form-group">
+            <label class="form-label">Typ emailu</label>
+            <select id="emailType" class="form-control">
+              <option value="followup">📋 Follow-up po schůzce</option>
+              <option value="offer">📄 Zaslání nabídky</option>
+              <option value="reactivation">🔄 Reaktivace klienta</option>
+              <option value="event">🎟️ Pozvánka na akci</option>
+              <option value="price_objection">💰 Odpověď na cenovou námitku</option>
+              <option value="upsell">📈 Upsell / Cross-sell</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Jméno klienta</label>
+              <input type="text" id="emailClientName" class="form-control" placeholder="Ing. Jan Novák">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Firma</label>
+              <input type="text" id="emailCompany" class="form-control" placeholder="ABC s.r.o.">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kontext / poznámky</label>
+            <textarea id="emailContext" class="form-control" rows="5" placeholder="Co bylo projednáno, specifické detaily, požadavky klienta..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tón komunikace</label>
+            <select id="emailTone" class="form-control">
+              <option value="professional">Profesionální</option>
+              <option value="formal">Formální</option>
+              <option value="friendly">Přátelský</option>
+              <option value="urgent">Naléhavý</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" id="generateEmailBtn">✨ Generovat email</button>
+        </div>
+
+        <div class="output-panel card" id="emailOutputPanel">
+          <div class="output-placeholder" id="emailPlaceholder">
+            <div class="placeholder-icon">✉️</div>
+            <p>Vyplňte formulář vlevo<br>a klikněte na <strong>Generovat email</strong></p>
+          </div>
+          <div id="emailOutput" class="hidden">
+            <div class="email-field-box">
+              <div class="email-field-label">Předmět:</div>
+              <div class="email-subject-val" id="emailSubjectVal"></div>
+            </div>
+            <div class="email-field-box email-body-box">
+              <div class="email-field-label">Tělo emailu:</div>
+              <div class="email-body-val" id="emailBodyVal"></div>
+            </div>
+            <div class="email-btn-row">
+              <button class="btn btn-primary" id="copyFullEmailBtn">📋 Kopírovat vše</button>
+              <button class="btn btn-secondary" id="openMailBtn">📧 Otevřít v emailu</button>
+              <button class="btn btn-sm btn-ghost" id="copySubjectBtn">Kopírovat předmět</button>
+              <button class="btn btn-sm btn-ghost" id="copyBodyBtn">Kopírovat tělo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meeting Notes Tab -->
+    <div id="tab-meeting-notes" class="tab-pane hidden">
+      <div class="two-col-layout">
+        <div class="form-panel card">
+          <h3 class="section-title">Surové poznámky ze schůzky</h3>
+          <div class="form-group">
+            <label class="form-label">Klient / firma</label>
+            <input type="text" id="meetingClient" class="form-control" placeholder="Jan Novák, ABC s.r.o.">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Datum schůzky</label>
+            <input type="date" id="meetingDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Poznámky (volná forma)</label>
+            <textarea id="meetingNotes" class="form-control" rows="10" placeholder="Zadejte surové poznámky ze schůzky — heslovitě, nestrukturovaně. AI je zformátuje do profesionálního zápisu.
+
+Příklad:
+- mluvili jsme o O2 Firemní data, zájem o 5G
+- problém se současným poskytovatelem - výpadky
+- rozhoduje Novák + IT ředitel Marek
+- příští schůzka za 2 týdny
+- pošlou nám přístup k aktuální smlouvě"></textarea>
+          </div>
+          <button class="btn btn-primary btn-full" id="generateNotesBtn">📝 Strukturovat zápis</button>
+        </div>
+
+        <div class="output-panel card" id="notesOutputPanel">
+          <div class="output-placeholder" id="notesPlaceholder">
+            <div class="placeholder-icon">📝</div>
+            <p>Zadejte poznámky vlevo<br>a klikněte na <strong>Strukturovat zápis</strong></p>
+          </div>
+          <div id="notesOutput" class="hidden">
+            <div class="notes-formatted" id="notesFormatted"></div>
+            <div class="email-btn-row">
+              <button class="btn btn-primary" id="copyNotesBtn">📋 Kopírovat zápis</button>
+              <button class="btn btn-secondary" id="exportNotesBtn">💾 Exportovat .txt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PAGE: TICKETS                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-tickets" class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">🎟️ Lístky O2 Arena</h1>
+        <p class="page-subtitle" style="font-size:11.5px;color:var(--text-tertiary)">Nahrajte hlavní nominační tabulku O2 Aréna (soubor s listy Akce_2026)</p>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-sm btn-ghost" id="resetTicketsBtn" title="Smazat nahraná data a nahrát znovu">🔄 Reset dat</button>
+        <label class="btn btn-primary" for="ticketsUpload">
+          📎 Nahrát / Aktualizovat Excel
+          <input type="file" id="ticketsUpload" accept=".xlsx,.xls" style="display:none">
+        </label>
+      </div>
+    </div>
+
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab-group="tickets" data-target="tickets-table">📋 Přehled akcí</button>
+      <button class="tab-btn" data-tab-group="tickets" data-target="tickets-nominations">📝 Generátor nominací</button>
+      <button class="tab-btn" data-tab-group="tickets" data-target="tickets-history">🕐 Historie lístků</button>
+    </div>
+
+    <!-- Tickets Table Tab -->
+    <div id="tab-tickets-table" class="tab-pane active">
+      <div class="card">
+        <div class="table-toolbar">
+          <input type="text" id="ticketsSearch" class="form-control search-input" placeholder="🔍 Hledat akci...">
+          <div class="filter-chips" id="ticketsFilterChips">
+            <button class="filter-chip active" data-filter="">📋 Vše</button>
+            <button class="filter-chip" data-filter="Schváleno">✅ Schváleno</button>
+            <button class="filter-chip" data-filter="Čeká">⏳ Čeká</button>
+            <button class="filter-chip" data-filter="Zamítnuto">❌ Zamítnuto</button>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="openInviteGenBtn">✉️ Pozvánka</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" id="ticketsTable">
+            <thead>
+              <tr>
+                <th>Název akce</th>
+                <th>Datum</th>
+                <th title="✅ Schváleno · 🟡 Celkem přihlášeno / Kapacita">Obsazenost <span style="font-size:10px;color:var(--text-tertiary)">(✅ schv. · emoji celk.)</span></th>
+                <th>Můj stav</th>
+                <th>Akce</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsTableBody">
+              <tr><td colspan="5" class="empty-row">Nahrajte nominační Excel pro zobrazení dat.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nominations Generator Tab -->
+    <div id="tab-tickets-nominations" class="tab-pane hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📝 Nová nominace vstupenek</h2>
+          <button class="btn btn-sm btn-secondary" id="clearNominationsBtn">Vymazat vše</button>
+        </div>
+        <div class="nom-form" id="nomForm">
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label class="form-label">Akce (z nahraného Excel)</label>
+              <select id="nomEventSel" class="form-control">
+                <option value="">-- Vyberte akci --</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label class="form-label">Počet vstupenek</label>
+              <input type="number" id="nomCount" class="form-control" value="2" min="1" max="12">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">OP (číslo obchodního případu)</label>
+              <input type="text" id="nomOP" class="form-control" placeholder="OP-...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kontaktní osoba (KO)</label>
+              <input type="text" id="nomKontakt" class="form-control" placeholder="Ing. Jan Novák">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Firma (zákazník)</label>
+              <input type="text" id="nomFirma" class="form-control" placeholder="ABC s.r.o.">
+            </div>
+            <div class="form-group">
+              <label class="form-label">IČO</label>
+              <input type="text" id="nomICO" class="form-control" placeholder="12345678" maxlength="8">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Pozice</label>
+              <input type="text" id="nomPozice" class="form-control" placeholder="jednatel / IT ředitel">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Celkové výnosy klienta</label>
+              <input type="text" id="nomVynosy" class="form-control" placeholder="150000">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Typ</label>
+              <select id="nomTyp" class="form-control">
+                <option value="Retence">Retence</option>
+                <option value="Nový prodej">Nový prodej</option>
+                <option value="Akvizice">Akvizice</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefon klienta</label>
+              <input type="text" id="nomTelefon" class="form-control" placeholder="777 123 456">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Specifické zdůvodnění</label>
+            <textarea id="nomZduvodneni" class="form-control" rows="2" placeholder="Proč chci klientovi lístky dát..."></textarea>
+          </div>
+          <button class="btn btn-primary btn-full" id="addNominationBtn">+ Přidat nominaci do seznamu</button>
+        </div>
+
+        <div id="nomListWrap" class="hidden" style="margin-top:1.25rem">
+          <h3 class="section-title" style="margin-bottom:.75rem">Připravené nominace (<span id="nomListCount">0</span>)</h3>
+          <div id="nomList" class="nom-list"></div>
+          <div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap">
+            <button class="btn btn-primary" id="exportNomExcelBtn">📥 Stáhnout Excel nominací</button>
+            <button class="btn btn-secondary" id="generateNomEmailBtn">✉️ Generovat email pro Marťase</button>
+          </div>
+          <div id="nomEmailOutput" class="hidden" style="margin-top:1rem">
+            <label class="form-label">Email pro nadřízeného:</label>
+            <textarea id="nomEmailText" class="form-control" rows="10" readonly style="background:var(--bg);font-size:13px"></textarea>
+            <div style="display:flex;gap:.5rem;margin-top:.5rem">
+              <button class="btn btn-sm btn-secondary" id="copyNomEmailBtn">📋 Kopírovat</button>
+              <button class="btn btn-sm btn-primary" id="mailNomEmailBtn">📧 Otevřít v emailu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tickets History Tab -->
+    <div id="tab-tickets-history" class="tab-pane hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Historie schválených lístků (Jakub Sedláček)</h2>
+          <div style="display:flex;align-items:center;gap:.6rem">
+            <span class="badge badge-info" id="historyCount">0 záznamů</span>
+            <button class="btn btn-sm btn-ghost" id="clearAllHistoryBtn" title="Smazat veškerou historii lístků" style="color:var(--danger)">🗑 Smazat vše</button>
+          </div>
+        </div>
+        <div id="ticketsHistoryList" class="history-cards-grid">
+          <div class="empty-state">
+            <div class="empty-icon">🎟️</div>
+            <p>Žádná historie lístků.<br>Nahrajte Excel s nominacemi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PAGE: OBJECTIONS                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-objections" class="page">
+    <div class="page-header">
+      <h1 class="page-title">💬 Objection Trainer</h1>
+    </div>
+
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab-group="objections" data-target="obj-trainer">🧠 Námitky</button>
+      <button class="tab-btn" data-tab-group="objections" data-target="obj-scripts">📜 Skripty</button>
+    </div>
+
+    <!-- Objection Trainer Tab -->
+    <div id="tab-obj-trainer" class="tab-pane active">
+      <div class="objections-layout">
+        <div class="objections-left">
+          <p class="section-hint">Klikněte na námitku pro AI odpověď v kontextu</p>
+          <div class="objections-grid" id="objectionsGrid">
+            <!-- Generated by objections.js -->
+          </div>
+        </div>
+        <div class="objections-right">
+          <div class="card" id="objectionResponsePanel">
+            <div class="output-placeholder" id="objPlaceholder">
+              <div class="placeholder-icon">💬</div>
+              <p>Vyberte námitku vlevo<br>pro zobrazení AI odpovědi</p>
+            </div>
+            <div id="objResponseArea" class="hidden">
+              <div class="obj-selected-label" id="objSelectedLabel"></div>
+              <div class="form-group">
+                <label class="form-label">Kontext (firma, situace, co víte o klientovi)</label>
+                <textarea id="objContext" class="form-control" rows="3" placeholder="Např: Mid-market výrobce, 120 zaměstnanců, aktuálně T-Mobile, smlouva vyprší Q2..."></textarea>
+              </div>
+              <button class="btn btn-primary btn-full" id="generateObjResponseBtn">✨ Generovat odpověď</button>
+              <div id="objResponseOutput" class="hidden">
+                <div class="obj-response-text" id="objResponseText"></div>
+                <button class="btn btn-sm btn-secondary" id="copyObjResponseBtn">📋 Kopírovat</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts Tab -->
+    <div id="tab-obj-scripts" class="tab-pane hidden">
+      <div id="scriptsContainer" class="scripts-grid">
+        <!-- Generated by objections.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PAGE: SFA MEETING GENERATOR                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-sfa" class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">📋 SFA generátor</h1>
+        <p class="page-subtitle">Automatizuj zadávání schůzek do SFA pomocí Claude Cowork</p>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-primary" id="sfaAddMeetingBtn">+ Přidat schůzku</button>
+      </div>
+    </div>
+
+    <!-- Meeting cards — rendered by sfa.js -->
+    <div id="sfaMeetingsList"></div>
+
+    <!-- Action bar -->
+    <div class="sfa-action-bar">
+      <button class="btn btn-ghost btn-sm" id="sfaResetBtn" title="Smazat vše a začít novou sadu">🗑️ Nová sada</button>
+      <button class="btn btn-ghost btn-sm" id="sfaExportAllBtn" title="Exportovat všechny schůzky jako .ics soubor pro Outlook">📅 Export do Outlooku</button>
+      <button class="btn btn-secondary" id="sfaGenerateAllBtn">✨ Vygenerovat všechny záznamy</button>
+      <button class="btn btn-primary" id="sfaAssembleBtn" disabled>
+        📋 Sestavit SFA prompt
+        <span class="sfa-done-chip" id="sfaDoneCount">0/0</span>
+      </button>
+    </div>
+
+    <!-- Output section (initially hidden) -->
+    <div id="sfaOutputSection" class="hidden" style="margin-top:1.5rem">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📋 SFA Prompt pro Claude Cowork</h2>
+          <button class="btn btn-primary" id="sfaCopyPromptBtn">📋 Kopírovat vše</button>
+        </div>
+        <div class="sfa-prompt-notice">
+          <strong>Jak použít:</strong> Zkopírujte celý prompt a vložte ho do Claude Cowork. Claude automaticky zadá všechny schůzky do SFA — pole <em>Týká se</em> nebude upravovat.
+        </div>
+        <textarea id="sfaPromptOutput" class="sfa-prompt-box" readonly spellcheck="false"
+          placeholder="Prompt se zde zobrazí po kliknutí na Sestavit SFA prompt…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PAGE: CLAUDE COWORK PROMPTS                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-cowork" class="page">
+    <div class="page-header">
+      <h1 class="page-title">🤖 Claude Cowork – Prompty</h1>
+    </div>
+
+    <div class="cowork-prompts-grid" id="coworkPromptsGrid">
+
+      <!-- PROMPT CARD 1: SFA – Aktualizace datumů OP v prodlení -->
+      <div class="card cowork-prompt-card">
+        <div class="cowork-prompt-header">
+          <span class="cowork-prompt-icon">📅</span>
+          <div>
+            <div class="cowork-prompt-title">SFA – Aktualizace datumů OP v prodlení</div>
+            <div class="cowork-prompt-desc">Vyčistí obchodní případy v SFA, které jsou již v prodlení — posune data doručení o 3+ týdny</div>
+          </div>
+        </div>
+        <div class="cowork-prompt-body" id="cowork-prompt-1-body">Běž na stránku sfa (https://sfa.to2.to2cz.cz/), otevři new sales ppl přes ikonku oken (Zobrazit záznamy použité k vygenerování grafu), klikni na SČ_New Sales PPL_6 měsíců a vyber kolonku Moje otevřené OP v prodlení. Nyní projdi všechny OP postupně v každém OP, které otevřeš, vlez do produktu obchodního případu a dvakrát klikni na ten řádek aby se ti otevřel. Následně změn předpokládané datum na náhodné datum minimálně 2 týdny a maximálně 4 týdny od dnešního dne (nikdy ne dříve než za 2 týdny; vyber libovolný konkrétní den v tomto rozmezí, různé OP dávej na různé dny, aby to nevypadalo jako automaticky generované — prostě odlož OP přirozeně dál), následně klikni na uložit a zavřít. Následně změn na to samé datum i předpokládané datum uzavření OP. Potom opět klikni na uložit a zavřít. Vždy než půjdeš na další OP v MOJE otevřené OP v prodlení, zeptej se mě, jestli můžeš pokračovat a napiš mi název firmy u které si naposled změnil to datum. A napiš mi, kolik OP jsi již odpracoval a kam jsi dal jejich datumy doručení.</div>
+        <div class="cowork-prompt-actions">
+          <button class="btn btn-primary cowork-copy-btn" data-prompt-id="1">📋 Kopírovat prompt</button>
+          <span class="cowork-copy-feedback hidden" id="cowork-copied-1">✓ Zkopírováno!</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- GLOBAL SEARCH OVERLAY                       -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="search-overlay hidden" id="searchOverlay">
+  <div class="search-backdrop" id="searchBackdrop"></div>
+  <div class="search-modal">
+    <div class="search-input-wrapper">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="globalSearchInput" class="search-input-field" placeholder="Hledat klienty, akce, lístky..." autocomplete="off">
+      <kbd class="search-esc">ESC</kbd>
+    </div>
+    <div id="searchResults" class="search-results">
+      <div class="search-hint">Začněte psát pro vyhledávání...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- MODAL CONTAINER                             -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="modalContainer"></div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Scripts -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/email.js"></script>
+<script src="js/tickets.js"></script>
+<script src="js/objections.js"></script>
+<script src="js/sfa.js"></script>
+<script src="js/cowork.js"></script>
+<script>
+  // Boot the app
+  App.init();
+</script>
+</body>
+</html>

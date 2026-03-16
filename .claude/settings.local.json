@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(node --version)",
+      "Bash(pip show openpyxl)",
+      "Bash(pip3 show openpyxl)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where python)",
+      "Bash(where python3)",
+      "Bash(\"C:\\\\Users\\\\Jakub\\\\Downloads\\\\Appka\\\\_redirects\")",
+      "Bash(wrangler pages deploy --project-name o2-toolkit)",
+      "Read(//c/Users/Jakub/Downloads/**)",
+      "Bash(ls -lah \"O2 Aréna_akce_2024_final \\(3\\).xlsx\")",
+      "Bash(python3 -c \":*)",
+      "Bash(npx wrangler:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \":*)",
+      "Bash(cd /tmp)",
+      "Bash(npx netlify-cli:*)",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\(''''Default branch:'''',d.get\\(''''default_branch''''\\)\\);print\\(''''Homepage:'''',d.get\\(''''homepage'''',''''''''\\)\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr 8888)",
+      "Bash(tasklist /FI \"PID eq 18324\" /V)",
+      "Bash(tasklist)",
+      "Bash(wmic process:*)",
+      "Bash(powershell -command \"Get-Process -Id 18324 | Select-Object Path; \\(Get-WmiObject Win32_Process -Filter ''ProcessId=18324''\\).CommandLine\")",
+      "Bash(python grade.py)",
+      "Bash(python -X utf8 grade.py)",
+      "Bash(python \"/c/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/skills/skill-creator/eval-viewer/generate_review.py\" --help)",
+      "Bash(SKILL_CREATOR=\"/c/Users/Jakub/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/skills/skill-creator\")",
+      "Read(//c/Users/Jakub/Downloads/Appka/$SKILL_CREATOR/**)",
+      "Bash(WORKSPACE=\"/c/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/frontend-design-workspace/iteration-1\")",
+      "Bash(BENCHMARK=\"/c/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/frontend-design-workspace/iteration-1/benchmark.json\")",
+      "Bash(STATIC_OUT=\"/c/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/frontend-design-workspace/review.html\")",
+      "Bash(__NEW_LINE_33afbcdb134b38af__ python:*)",
+      "Bash(SKILL_CREATOR=\"C:/Users/Jakub/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/skills/skill-creator\")",
+      "Bash(python \"$SKILL_CREATOR/eval-viewer/generate_review.py\" \"C:/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/frontend-design-workspace/iteration-1\" --skill-name \"frontend-design\" --benchmark \"C:/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/frontend-design-workspace/iteration-1/benchmark.json\" --static \"C:/Users/Jakub/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/5b54eacf-2116-449d-8520-48f0bf8f360e/da6e7680-b1da-474c-863f-a361b527b256/frontend-design-workspace/review.html\")"
+    ]
+  }
+}
