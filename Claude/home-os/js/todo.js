@@ -627,7 +627,7 @@ const Todo = (() => {
       rows.push(`<div style="margin-bottom:.625rem">
         <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;text-transform:capitalize">${label}</div>
         ${tasks.map(t => {
-          const cat = _CATEGORIES.find(c=>c.key===t.category) ?? _CATEGORIES[0];
+          const cat = _CAT[t.category] ?? _CAT.ostatní;
           return `<div style="display:flex;align-items:center;gap:.4rem;padding:.3rem .5rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:.2rem;font-size:.82rem">
             <span style="font-size:.75rem">${cat.emoji}</span>
             <span style="flex:1;${t.rolled?'color:var(--text-muted)':''}">${App.esc(t.text)}</span>
