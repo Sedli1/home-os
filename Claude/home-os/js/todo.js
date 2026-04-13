@@ -267,8 +267,8 @@ const Todo = (() => {
     let streak = 0;
     const d = new Date(_today()+'T00:00:00');
     d.setDate(d.getDate()-1);
-    for (let i=0;i<365;i++) { const k=d.toISOString().split('T')[0]; if(!journal[k]?.tasks?.length) break; streak++; d.setDate(d.getDate()-1); }
-    if (journal[_today()]?.tasks?.length) streak++;
+    for (let i=0;i<365;i++) { const k=d.toISOString().split('T')[0]; if(!journal[k]?.evening_data) break; streak++; d.setDate(d.getDate()-1); }
+    if (journal[_today()]?.evening_data) streak++;
     return streak;
   }
 
@@ -321,8 +321,8 @@ const Todo = (() => {
 
     let html = '';
 
-    // Auto-seed carry-over tasks from yesterday
-    if (!day.tasks || !day.tasks.length) _seedFromYesterday(j, dk);
+    // Auto-seed carry-over tasks from yesterday (once per day via seeded flag)
+    if (!day.seeded) _seedFromYesterday(j, dk);
 
     const tasks     = day.tasks ?? [];
     const doneMask  = day.done ?? [];
@@ -369,8 +369,8 @@ const Todo = (() => {
     // DB todos with today's deadline
     html += _renderDbTodayTasks();
 
-    // Evening reflection (if evening or closed)
-    if (isEvening && hasTasks && !closed) {
+    // Evening reflection (always available when tasks exist and day is open)
+    if (hasTasks && !closed) {
       html += _eveningReflection(day);
     } else if (closed) {
       html += _closedDaySummary(day);
@@ -392,6 +392,7 @@ const Todo = (() => {
     _migrateDay(yday);
     if (!j[dk].tasks) j[dk].tasks = [];
     if (!j[dk].done)  j[dk].done  = [];
+    j[dk].seeded = true;
 
     // Prefer explicitly built tomorrow_tasks (set by closeDay).
     // Fall back to direct seeding only for days that predate closeDay logic.
@@ -567,6 +568,14 @@ const Todo = (() => {
     const barC  = pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444';
     const emoji = pct===100?'🏆':pct>=80?'💪':pct>=50?'👍':'💬';
 
+    const taskRows = tasks.map((t, i) => {
+      const isDone = done.includes(i);
+      return `<div style="display:flex;align-items:center;gap:.5rem;padding:.2rem 0;font-size:.82rem;${isDone?'color:var(--text-muted)':''}">
+        <span style="font-size:.75rem">${isDone?'✅':'⬜'}</span>
+        <span style="${isDone?'text-decoration:line-through':'font-weight:500'}">${App.esc(t.text)}</span>
+      </div>`;
+    }).join('');
+
     return `<div class="card" style="margin-top:1rem">
       <div class="card-header">
         <div class="card-title">${emoji} Den uzavřen</div>
@@ -575,7 +584,8 @@ const Todo = (() => {
       <div class="card-body">
         ${ev.note ? `<div style="background:var(--surface2);border-radius:8px;padding:.5rem .75rem;font-size:.85rem;margin-bottom:.75rem">🏆 ${App.esc(ev.note)}</div>` : ''}
         ${ev.mood!==null&&ev.mood!==undefined ? `<div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem">Nálada: ${_MOODS[ev.mood]}</div>` : ''}
-        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+        ${tasks.length ? `<div style="border-top:1px solid var(--border);padding-top:.625rem;margin-top:.375rem">${taskRows}</div>` : ''}
+        <div style="display:flex;gap:.5rem;margin-top:.75rem">
           <button class="btn btn-sm btn-outline" onclick="Todo.reopenDay()">🔓 Znovu otevřít den</button>
         </div>
       </div>
@@ -666,6 +676,27 @@ const Todo = (() => {
     loadCheckin();
   }
 
+  function postponeTask(idx, days) {
+    const j = _getJournal(); const dk = _today();
+    const tasks = j[dk]?.tasks; if (!tasks?.[idx]) return;
+    const t = tasks[idx];
+    // Target day key
+    const target = new Date(_today()+'T00:00:00');
+    target.setDate(target.getDate() + days);
+    const tdk = target.toISOString().split('T')[0];
+    if (!j[tdk]) j[tdk] = { tasks: [], done: [], seeded: true };
+    if (!j[tdk].tomorrow_tasks) j[tdk].tomorrow_tasks = [];
+    j[tdk].tomorrow_tasks.push({ ...t, rolled: true, from_chain: false, roll_count: (t.roll_count??0)+1 });
+    // Remove from today
+    tasks.splice(idx, 1);
+    j[dk].done = (j[dk].done??[]).filter(i=>i!==idx).map(i=>i>idx?i-1:i);
+    _saveJournal(j);
+    App.closeModal();
+    const label = days===1?'zítra':days===2?'pozítří':`za ${days} dny`;
+    App.toast(`Úkol přesunut na ${label}`, 'success');
+    loadCheckin();
+  }
+
   function deleteTask(idx) {
     if (!confirm('Smazat tento úkol?')) return;
     const j = _getJournal(); const dk = _today();
@@ -699,6 +730,9 @@ const Todo = (() => {
         <button onclick="Todo.moveTask(${idx},-1);App.closeModal()" class="btn btn-outline" style="text-align:left" ${idx===0?'disabled':''}>↑ Posunout nahoru</button>
         <button onclick="Todo.moveTask(${idx},1);App.closeModal()" class="btn btn-outline" style="text-align:left" ${idx>=(j[dk].tasks.length-1)?'disabled':''}>↓ Posunout dolů</button>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0">
+        <button onclick="Todo.postponeTask(${idx},1)" class="btn btn-outline" style="text-align:left">📅 Přesunout na zítra</button>
+        <button onclick="Todo.postponeTask(${idx},2)" class="btn btn-outline" style="text-align:left">📅 Přesunout na pozítří</button>
+        <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0">
         <button onclick="Todo.openPipelineDialog('${dk}',${idx})" class="btn btn-outline" style="text-align:left">🤝 Pipeline stav ${pipeline?'('+pipeline.emoji+')':''}</button>
         <button onclick="Todo.openDelegateDialog('${dk}',${idx})" class="btn btn-outline" style="text-align:left">👤 Delegovat ${t.delegated_to?'('+App.esc(t.delegated_to)+')':''}</button>
         <button onclick="Todo.setTaskTime(${idx})" class="btn btn-outline" style="text-align:left">🕐 Nastavit čas ${t.time?'('+t.time+')':''}</button>
@@ -709,11 +743,27 @@ const Todo = (() => {
   }
 
   function setTaskTime(idx) {
-    const time = prompt('Zadej čas (např. 10:00):');
-    if (time === null) return;
     const j = _getJournal(); const dk = _today();
     const t = j[dk]?.tasks?.[idx]; if (!t) return;
-    t.time = time.trim() || undefined;
+    App.openModal('🕐 Nastavit čas úkolu', `
+      <p style="font-size:.8rem;background:var(--surface2);padding:.5rem .75rem;border-radius:8px;margin-bottom:.875rem"><strong>${App.esc(t.text)}</strong></p>
+      <div class="form-group">
+        <label class="form-label">Čas</label>
+        <input id="task-time-input" class="form-control" type="time" value="${t.time??''}" placeholder="10:00">
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.75rem">
+        <button class="btn btn-primary" style="flex:1" onclick="Todo._saveTaskTime(${idx})">Uložit</button>
+        <button class="btn btn-outline" onclick="Todo._saveTaskTime(${idx},true)">Smazat čas</button>
+      </div>
+    `);
+    setTimeout(() => document.getElementById('task-time-input')?.focus(), 50);
+  }
+
+  function _saveTaskTime(idx, clear=false) {
+    const val = clear ? '' : (document.getElementById('task-time-input')?.value ?? '');
+    const j = _getJournal(); const dk = _today();
+    const t = j[dk]?.tasks?.[idx]; if (!t) return;
+    t.time = val.trim() || undefined;
     _saveJournal(j);
     App.closeModal();
     loadCheckin();
@@ -858,7 +908,7 @@ const Todo = (() => {
   return {
     load, toggle, openEdit, delete: deleteTodo,
     loadCheckin, loadDelegated, addTask, toggleTask, cyclePriority,
-    deleteTask, moveTask, openTaskMenu, setTaskTime,
+    deleteTask, postponeTask, moveTask, openTaskMenu, setTaskTime, _saveTaskTime,
     openDelegateDialog, saveDelegation, markDelegatedDone,
     openPipelineDialog, setPipelineStage, importDbTask,
     closeDay, reopenDay, _selectMood,
