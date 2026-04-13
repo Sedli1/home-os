@@ -1,0 +1,11 @@
+name = "home-os"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+# Cloudflare Pages config
+# Deploy: wrangler pages deploy --project-name home-os
+# Dev:    wrangler pages dev . --compatibility-date 2024-09-23
+
+# Environment variables nastavuj v Cloudflare Dashboard:
+# Pages → home-os → Settings → Environment variables
+# (zatím žádné — Supabase klíče jsou na frontendu)
