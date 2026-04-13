@@ -35,7 +35,7 @@ const Todo = (() => {
       _bound = true;
     }
 
-    _setTab('ukoly');
+    _setTab(_activeTab);
   }
 
   function _setTab(tab) {
@@ -376,6 +376,9 @@ const Todo = (() => {
       html += _closedDaySummary(day);
     }
 
+    // Upcoming days
+    html += _upcomingSection(j);
+
     // History
     html += _historySection(j);
 
@@ -429,7 +432,7 @@ const Todo = (() => {
       return `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .625rem;border-radius:10px;background:${isDone?'var(--surface2)':highRoll?'#ef444408':t.from_db?'var(--surface2)':'var(--surface)'};margin-bottom:.375rem;border:1px solid ${highRoll?'#ef444425':hasDel?'#f59e0b30':'var(--border)'};opacity:${isDone?'.6':'1'};transition:all .2s"
         ${isDone?'':''}>
         <button onclick="Todo.toggleTask(${i})" style="width:22px;height:22px;border-radius:6px;border:2px solid ${isDone?'#10b981':priColor};background:${isDone?'#10b981':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;transition:all .15s">${isDone?'✓':''}</button>
-        <div style="flex:1;min-width:0">
+        <div style="flex:1;min-width:0${closed?'':';cursor:pointer'}" ${closed?'':` onclick="Todo.openTaskMenu(${i})"`}>
           <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
             <span style="font-size:.875rem;font-weight:${isDone?'400':'500'};${isDone?'text-decoration:line-through;color:var(--text-muted)':''}">${App.esc(t.text)}</span>
             ${_rollBadge(t)}
@@ -594,9 +597,50 @@ const Todo = (() => {
 
   function reopenDay() {
     const j = _getJournal(); const dk = _today();
+    const oldNote = j[dk]?.evening_data?.note ?? '';
+    const oldMood = j[dk]?.evening_data?.mood ?? null;
     if (j[dk]) { delete j[dk].evening_data; j[dk].tomorrow_tasks = []; }
     _saveJournal(j);
     loadCheckin();
+    setTimeout(() => {
+      const inp = document.getElementById('mujden-win');
+      if (inp && oldNote) inp.value = oldNote;
+      if (oldMood !== null) { _selectedMood = oldMood; _selectMood(oldMood); }
+    }, 50);
+  }
+
+  // ── Nadcházející dny ──────────────────────────
+  function _upcomingSection(j) {
+    const rows = [];
+    for (let i = 1; i <= 5; i++) {
+      const d = new Date(_today()+'T00:00:00');
+      d.setDate(d.getDate() + i);
+      const dk = d.toISOString().split('T')[0];
+      const day = j[dk];
+      if (!day) continue;
+      const tasks = [
+        ...(day.tasks ?? []),
+        ...(day.tomorrow_tasks ?? []),
+      ];
+      if (!tasks.length) continue;
+      const label = d.toLocaleDateString('cs-CZ', { weekday:'long', day:'numeric', month:'short' });
+      rows.push(`<div style="margin-bottom:.625rem">
+        <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;text-transform:capitalize">${label}</div>
+        ${tasks.map(t => {
+          const cat = _CATEGORIES.find(c=>c.key===t.category) ?? _CATEGORIES[0];
+          return `<div style="display:flex;align-items:center;gap:.4rem;padding:.3rem .5rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:.2rem;font-size:.82rem">
+            <span style="font-size:.75rem">${cat.emoji}</span>
+            <span style="flex:1;${t.rolled?'color:var(--text-muted)':''}">${App.esc(t.text)}</span>
+            ${t.time?`<span style="font-size:.7rem;color:var(--text-muted)">🕐 ${t.time}</span>`:''}
+          </div>`;
+        }).join('')}
+      </div>`);
+    }
+    if (!rows.length) return '';
+    return `<div style="margin-top:1.25rem">
+      <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.625rem">📅 Nadcházející dny</div>
+      ${rows.join('')}
+    </div>`;
   }
 
   // ── History with expandable cards ─────────────
@@ -684,9 +728,10 @@ const Todo = (() => {
     const target = new Date(_today()+'T00:00:00');
     target.setDate(target.getDate() + days);
     const tdk = target.toISOString().split('T')[0];
-    if (!j[tdk]) j[tdk] = { tasks: [], done: [], seeded: true };
-    if (!j[tdk].tomorrow_tasks) j[tdk].tomorrow_tasks = [];
-    j[tdk].tomorrow_tasks.push({ ...t, rolled: true, from_chain: false, roll_count: (t.roll_count??0)+1 });
+    if (!j[tdk]) j[tdk] = {};
+    if (!j[tdk].tasks) j[tdk].tasks = [];
+    if (!j[tdk].done) j[tdk].done = [];
+    j[tdk].tasks.push({ ...t, rolled: true, from_chain: false, roll_count: (t.roll_count??0)+1 });
     // Remove from today
     tasks.splice(idx, 1);
     j[dk].done = (j[dk].done??[]).filter(i=>i!==idx).map(i=>i>idx?i-1:i);
