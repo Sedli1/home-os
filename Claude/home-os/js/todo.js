@@ -226,11 +226,41 @@ const Todo = (() => {
   //  MŮJ DEN v2.0 — plynulý 3-fázový tok
   // ═══════════════════════════════════════════════
 
+  let _journalCache = null;
+  let _journalSynced = false;
+
+  async function _initJournal() {
+    if (_journalSynced) return;
+    const local = (() => { try { return JSON.parse(localStorage.getItem('hpos_work_journal') ?? '{}'); } catch { return {}; } })();
+    try {
+      const { data } = await db.from('work_journal').select('data').single();
+      if (data?.data && Object.keys(data.data).length > 0) {
+        _journalCache = data.data;
+        localStorage.setItem('hpos_work_journal', JSON.stringify(_journalCache));
+      } else {
+        _journalCache = local;
+        if (Object.keys(local).length > 0) {
+          const uid = Auth.getUser()?.id;
+          if (uid) await db.from('work_journal').upsert({ user_id: uid, data: local });
+        }
+      }
+    } catch {
+      _journalCache = local;
+    }
+    _journalSynced = true;
+  }
+
   function _getJournal() {
+    if (_journalCache !== null) return _journalCache;
     try { return JSON.parse(localStorage.getItem('hpos_work_journal') ?? '{}'); }
     catch { return {}; }
   }
-  function _saveJournal(j) { localStorage.setItem('hpos_work_journal', JSON.stringify(j)); }
+  function _saveJournal(j) {
+    _journalCache = j;
+    localStorage.setItem('hpos_work_journal', JSON.stringify(j));
+    const uid = Auth.getUser()?.id;
+    if (uid) db.from('work_journal').upsert({ user_id: uid, data: j }, { onConflict: 'user_id' }).catch(() => {});
+  }
   function _today() { return new Date().toISOString().split('T')[0]; }
   function _yesterday() { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
   function _fmtDate(ds) { return new Date(ds+'T00:00:00').toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long'}); }
@@ -308,9 +338,10 @@ const Todo = (() => {
   }
 
   // ── Render orchestrator v2 ────────────────────
-  function loadCheckin() {
+  async function loadCheckin() {
     const el = document.getElementById('todo-tab-checkin');
     if (!el) return;
+    await _initJournal();
 
     const j  = _getJournal();
     const dk = _today();
@@ -618,10 +649,7 @@ const Todo = (() => {
       const dk = d.toISOString().split('T')[0];
       const day = j[dk];
       if (!day) continue;
-      const tasks = [
-        ...(day.tasks ?? []),
-        ...(day.tomorrow_tasks ?? []),
-      ];
+      const tasks = day.tasks ?? [];
       if (!tasks.length) continue;
       const label = d.toLocaleDateString('cs-CZ', { weekday:'long', day:'numeric', month:'short' });
       rows.push(`<div style="margin-bottom:.625rem">
@@ -770,13 +798,22 @@ const Todo = (() => {
     const j = _getJournal(); const dk = _today();
     const t = j[dk]?.tasks?.[idx]; if (!t) return;
     const pipeline = t.pipeline_stage ? _PIPELINE.find(p=>p.key===t.pipeline_stage) : null;
+
+    // Build next 7 days picker
+    const dayBtns = Array.from({length:7},(_,i) => {
+      const d = new Date(_today()+'T00:00:00');
+      d.setDate(d.getDate() + i + 1);
+      const label = d.toLocaleDateString('cs-CZ', { weekday:'short', day:'numeric', month:'numeric' });
+      return `<button onclick="Todo.postponeTask(${idx},${i+1})" style="padding:.35rem .5rem;font-size:.75rem;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;white-space:nowrap">${label}</button>`;
+    }).join('');
+
     App.openModal('⚙️ '+App.esc(t.text), `
       <div style="display:flex;flex-direction:column;gap:.5rem">
         <button onclick="Todo.moveTask(${idx},-1);App.closeModal()" class="btn btn-outline" style="text-align:left" ${idx===0?'disabled':''}>↑ Posunout nahoru</button>
         <button onclick="Todo.moveTask(${idx},1);App.closeModal()" class="btn btn-outline" style="text-align:left" ${idx>=(j[dk].tasks.length-1)?'disabled':''}>↓ Posunout dolů</button>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0">
-        <button onclick="Todo.postponeTask(${idx},1)" class="btn btn-outline" style="text-align:left">📅 Přesunout na zítra</button>
-        <button onclick="Todo.postponeTask(${idx},2)" class="btn btn-outline" style="text-align:left">📅 Přesunout na pozítří</button>
+        <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:.25rem">📅 Přesunout na</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem">${dayBtns}</div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0">
         <button onclick="Todo.openPipelineDialog('${dk}',${idx})" class="btn btn-outline" style="text-align:left">🤝 Pipeline stav ${pipeline?'('+pipeline.emoji+')':''}</button>
         <button onclick="Todo.openDelegateDialog('${dk}',${idx})" class="btn btn-outline" style="text-align:left">👤 Delegovat ${t.delegated_to?'('+App.esc(t.delegated_to)+')':''}</button>
