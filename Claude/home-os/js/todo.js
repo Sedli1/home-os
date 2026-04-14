@@ -462,7 +462,7 @@ const Todo = (() => {
 
       return `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .625rem;border-radius:10px;background:${isDone?'var(--surface2)':highRoll?'#ef444408':t.from_db?'var(--surface2)':'var(--surface)'};margin-bottom:.375rem;border:1px solid ${highRoll?'#ef444425':hasDel?'#f59e0b30':'var(--border)'};opacity:${isDone?'.6':'1'};transition:all .2s"
         ${isDone?'':''}>
-        <button onclick="Todo.toggleTask(${i})" style="width:22px;height:22px;border-radius:6px;border:2px solid ${isDone?'#10b981':priColor};background:${isDone?'#10b981':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;transition:all .15s">${isDone?'✓':''}</button>
+        <button onclick="event.stopPropagation();Todo.toggleTask(${i})" style="width:22px;height:22px;border-radius:6px;border:2px solid ${isDone?'#10b981':priColor};background:${isDone?'#10b981':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;transition:all .15s">${isDone?'✓':''}</button>
         <div style="flex:1;min-width:0${closed?'':';cursor:pointer'}" ${closed?'':` onclick="Todo.openTaskMenu(${i})"`}>
           <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
             <span style="font-size:.875rem;font-weight:${isDone?'400':'500'};${isDone?'text-decoration:line-through;color:var(--text-muted)':''}">${App.esc(t.text)}</span>
