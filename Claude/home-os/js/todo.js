@@ -259,7 +259,7 @@ const Todo = (() => {
     _journalCache = j;
     localStorage.setItem('hpos_work_journal', JSON.stringify(j));
     const uid = Auth.getUser()?.id;
-    if (uid) db.from('work_journal').upsert({ user_id: uid, data: j }, { onConflict: 'user_id' }).catch(() => {});
+    if (uid) Promise.resolve(db.from('work_journal').upsert({ user_id: uid, data: j }, { onConflict: 'user_id' })).catch(() => {});
   }
   function _today() { return new Date().toISOString().split('T')[0]; }
   function _yesterday() { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
