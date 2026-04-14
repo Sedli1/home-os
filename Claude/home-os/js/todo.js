@@ -530,31 +530,45 @@ const Todo = (() => {
     const undone = tasks.map((t,i) => ({t,i})).filter(({i}) => !done.includes(i));
 
     return `<div class="card" style="margin-top:1rem;border:1.5px solid var(--primary,#6366f1)30" id="mujden-evening">
-      <div class="card-header"><div class="card-title">🌙 Uzavřít den</div></div>
-      <div class="card-body">
-        <div class="form-group">
-          <label class="form-label">Co se dnes povedlo?</label>
-          <input id="mujden-win" class="form-control" placeholder="Největší výhra dne…" style="font-size:.875rem">
-        </div>
-        ${undone.length ? `<div class="form-group">
-          <label class="form-label">Nesplněné úkoly — přesunout na zítra?</label>
-          ${undone.map(({t,i}) => `<label style="display:flex;align-items:center;gap:.5rem;padding:.35rem 0;cursor:pointer;user-select:none">
-            <input type="checkbox" id="ev-move-${i}" checked style="width:16px;height:16px;accent-color:var(--primary,#6366f1)">
-            <span style="font-size:.85rem">${App.esc(t.text)}</span>
-          </label>`).join('')}
-        </div>` : ''}
-        <div class="form-group">
-          <label class="form-label">Jak hodnotíš den?</label>
-          <div style="display:flex;gap:.5rem" id="mujden-mood-row">
-            ${_MOODS.map((m,i) => `<button onclick="Todo._selectMood(${i})" data-mood="${i}"
-              style="font-size:1.5rem;padding:.35rem .5rem;border-radius:10px;border:2px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s">${m}</button>`).join('')}
+      <div class="card-header" onclick="Todo._toggleEvening()" style="cursor:pointer;user-select:none">
+        <div class="card-title">🌙 Uzavřít den</div>
+        <span id="mujden-evening-chevron" style="font-size:.8rem;color:var(--text-muted)">▼</span>
+      </div>
+      <div id="mujden-evening-body" style="display:none">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Co se dnes povedlo?</label>
+            <input id="mujden-win" class="form-control" placeholder="Největší výhra dne…" style="font-size:.875rem">
           </div>
+          ${undone.length ? `<div class="form-group">
+            <label class="form-label">Nesplněné úkoly — přesunout na zítra?</label>
+            ${undone.map(({t,i}) => `<label style="display:flex;align-items:center;gap:.5rem;padding:.35rem 0;cursor:pointer;user-select:none">
+              <input type="checkbox" id="ev-move-${i}" checked style="width:16px;height:16px;accent-color:var(--primary,#6366f1)">
+              <span style="font-size:.85rem">${App.esc(t.text)}</span>
+            </label>`).join('')}
+          </div>` : ''}
+          <div class="form-group">
+            <label class="form-label">Jak hodnotíš den?</label>
+            <div style="display:flex;gap:.5rem" id="mujden-mood-row">
+              ${_MOODS.map((m,i) => `<button onclick="Todo._selectMood(${i})" data-mood="${i}"
+                style="font-size:1.5rem;padding:.35rem .5rem;border-radius:10px;border:2px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s">${m}</button>`).join('')}
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:.5rem;padding:.625rem" onclick="Todo.closeDay()">
+            🌙 Uzavřít den
+          </button>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:.5rem;padding:.625rem" onclick="Todo.closeDay()">
-          🌙 Uzavřít den
-        </button>
       </div>
     </div>`;
+  }
+
+  function _toggleEvening() {
+    const body = document.getElementById('mujden-evening-body');
+    const chev = document.getElementById('mujden-evening-chevron');
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : '';
+    if (chev) chev.textContent = open ? '▼' : '▲';
   }
 
   let _selectedMood = null;
@@ -666,8 +680,12 @@ const Todo = (() => {
     }
     if (!rows.length) return '';
     return `<div style="margin-top:1.25rem">
-      <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.625rem">📅 Nadcházející dny</div>
-      ${rows.join('')}
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.upcom-chev').textContent=this.nextElementSibling.style.display===''?'▲':'▼'"
+        style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;margin-bottom:.5rem">
+        <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">📅 Nadcházející dny</div>
+        <span class="upcom-chev" style="font-size:.8rem;color:var(--text-muted)">▼</span>
+      </div>
+      <div style="display:none">${rows.join('')}</div>
     </div>`;
   }
 
@@ -993,7 +1011,7 @@ const Todo = (() => {
     deleteTask, postponeTask, moveTask, openTaskMenu, setTaskTime, _saveTaskTime,
     openDelegateDialog, saveDelegation, markDelegatedDone,
     openPipelineDialog, setPipelineStage, importDbTask,
-    closeDay, reopenDay, _selectMood,
+    closeDay, reopenDay, _selectMood, _toggleEvening,
     getDashStatus,
   };
 })();
