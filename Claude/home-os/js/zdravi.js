@@ -43,14 +43,18 @@ const Zdravi = (() => {
       return;
     }
 
-    const { data: records } = await db.from('health_records').select('*').order('date', { ascending: false });
+    const [{ data: records }, { data: meds }] = await Promise.all([
+      db.from('health_records').select('*').order('date', { ascending: false }),
+      db.from('health_records').select('*, family_members(name,color)').eq('type', 'lék').order('title'),
+    ]);
+
     const recByMember = {};
     (records ?? []).forEach(r => {
       if (!recByMember[r.member_id]) recByMember[r.member_id] = [];
       recByMember[r.member_id].push(r);
     });
 
-    el.innerHTML = `<div class="grid-2" style="gap:1rem">
+    const memberGrid = `<div class="grid-2" style="gap:1rem">
       ${members.map(m => {
         const recs = recByMember[m.id] ?? [];
         const upcoming = recs.filter(r => r.next_date && r.next_date >= new Date().toISOString().split('T')[0])
@@ -62,7 +66,7 @@ const Zdravi = (() => {
               <div style="width:42px;height:42px;border-radius:50%;background:${m.color??'#6366f1'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;flex-shrink:0">${App.esc(m.name[0])}</div>
               <div>
                 <div style="font-weight:700">${App.esc(m.name)}</div>
-                <div style="font-size:.8rem;color:var(--text-muted)">${recs.length} záznamů</div>
+                <div style="font-size:.8rem;color:var(--text-muted)">${recs.length} záznam${recs.length === 1 ? '' : recs.length < 5 ? 'y' : 'ů'}</div>
               </div>
             </div>
             ${upcoming.length ? `<div style="margin-bottom:.5rem">
@@ -82,6 +86,29 @@ const Zdravi = (() => {
         </div>`;
       }).join('')}
     </div>`;
+
+    const medsPanel = meds?.length ? `
+      <div style="margin-top:1.25rem">
+        <div class="section-header"><span class="section-title">💊 Aktivní léky a recepty</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem;margin-top:.5rem">
+          ${meds.map(r => {
+            const mc = r.family_members;
+            return `<div style="display:flex;align-items:center;gap:.75rem;padding:.625rem .875rem;background:var(--surface2);border-radius:8px;border-left:3px solid #8b5cf6">
+              <span style="font-size:1.25rem;flex-shrink:0">💊</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:.9rem">${App.esc(r.title)}</div>
+                ${r.dosage ? `<div style="font-size:.78rem;color:var(--text-muted)">${App.esc(r.dosage)}${r.frequency ? ' · ' + App.esc(r.frequency) : ''}</div>` : ''}
+                ${mc ? `<div style="font-size:.75rem;color:${mc.color??'#6366f1'};font-weight:500;margin-top:.1rem">${App.esc(mc.name)}</div>` : ''}
+              </div>
+              <div style="display:flex;gap:.25rem;flex-shrink:0">
+                <button class="btn btn-icon btn-ghost btn-sm" onclick="Zdravi.editRecord('${r.id}')" title="Upravit">✏️</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
+    el.innerHTML = memberGrid + medsPanel;
   }
 
   // ── Záznamy ──────────────────────────────────
@@ -342,7 +369,7 @@ const Zdravi = (() => {
         if (files?.length) await Docs.uploadFiles('health', newRec.id, files);
         App.toast('Záznam přidán ✓', 'success');
         App.closeModal();
-        loadTab(activeTab);
+        load();
       }
     });
   }
@@ -414,7 +441,7 @@ const Zdravi = (() => {
         if (error) { App.toast('Chyba: ' + error.message, 'error'); return; }
         App.toast('Uloženo ✓', 'success');
         App.closeModal();
-        loadTab(activeTab);
+        load();
       }
     });
     // Load attachments inline after modal renders
@@ -425,7 +452,7 @@ const Zdravi = (() => {
     if (!confirm('Smazat zdravotní záznam?')) return;
     await db.from('health_records').delete().eq('id', id);
     App.toast('Smazáno.', '');
-    loadTab(activeTab);
+    load();
   }
 
   return { load, filterByMember, filterByType, openAddRecord, editRecord, deleteRecord, onTypeChange, addToCalendar };

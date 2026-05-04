@@ -67,6 +67,29 @@ const Auto = (() => {
       kmWarning = `<div style="margin-top:.625rem"><span class="countdown ${cls}">🔧 ${txt}</span></div>`;
     }
 
+    // Pneumatiky — najdi poslední výměnu
+    const lastTireService = services.find(s => s.category === 'pneumatiky');
+    let tireInfo = '';
+    if (lastTireService) {
+      const tireDate = new Date(lastTireService.date + 'T00:00:00');
+      const tireMonth = tireDate.getMonth() + 1; // 1-12
+      const tireSeason = (tireMonth >= 4 && tireMonth <= 9) ? '☀️ letní' : '❄️ zimní';
+      const daysSince = Math.round((new Date() - tireDate) / 86400000);
+      const monthsSince = Math.round(daysSince / 30);
+      // Připomenutí výměny: přibližně duben (na letní) a říjen (na zimní)
+      const now = new Date();
+      const swapSoon = (now.getMonth() + 1 === 3 || now.getMonth() + 1 === 9);
+      tireInfo = `<div style="margin-top:.375rem;font-size:.8rem;color:var(--text-muted);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span>🔄 Pneu: ${tireSeason} · nasazeny ${App.formatDate(lastTireService.date)}</span>
+        ${swapSoon ? `<span style="background:#fef3c7;color:#92400e;padding:.1rem .4rem;border-radius:4px;font-weight:600;font-size:.75rem">⚠️ čas na výměnu!</span>` : ''}
+      </div>`;
+    }
+
+    // Roční náklady za servis
+    const thisYear = new Date().getFullYear();
+    const thisYearServices = services.filter(s => s.date?.startsWith(thisYear));
+    const thisYearCost = thisYearServices.reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0);
+
     return `<div class="car-card">
       <div class="car-header">
         <div>
@@ -86,27 +109,39 @@ const Auto = (() => {
         <div class="car-date-row">
           <span class="car-date-label">🔧 STK</span>
           ${stkDays !== null
-            ? `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:.875rem">${App.formatDate(car.stk_date)}</span>${App.countdownBadge(stkDays)}</div>`
+            ? `<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                <span style="font-size:.875rem">${App.formatDate(car.stk_date)}</span>
+                ${App.countdownBadge(stkDays)}
+                <button class="btn btn-sm btn-ghost" style="font-size:.72rem;padding:.1rem .4rem;color:var(--text-muted)" onclick="Auto.addToCalendar('stk','${car.id}','${App.esc(car.name)}','${car.stk_date}')" title="Přidat do kalendáře">📅</button>
+               </div>`
             : '<span style="color:var(--text-light);font-size:.875rem">— nenastaveno</span>'}
         </div>
         <div class="car-date-row">
           <span class="car-date-label">🛡️ Pojištění</span>
           ${insDays !== null
-            ? `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:.875rem">${App.formatDate(car.insurance_date)}</span>${App.countdownBadge(insDays)}</div>`
+            ? `<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                <span style="font-size:.875rem">${App.formatDate(car.insurance_date)}</span>
+                ${App.countdownBadge(insDays)}
+                <button class="btn btn-sm btn-ghost" style="font-size:.72rem;padding:.1rem .4rem;color:var(--text-muted)" onclick="Auto.addToCalendar('pojisteni','${car.id}','${App.esc(car.name)}','${car.insurance_date}')" title="Přidat do kalendáře">📅</button>
+               </div>`
             : '<span style="color:var(--text-light);font-size:.875rem">— nenastaveno</span>'}
         </div>
       </div>
 
       ${kmWarning}
+      ${tireInfo}
       ${car.notes ? `<div style="margin-top:.75rem;font-size:.8125rem;color:var(--text-muted);padding:.5rem .75rem;background:var(--surface2);border-radius:8px">${App.esc(car.notes)}</div>` : ''}
 
       <div style="margin-top:.875rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.375rem">
           <span style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em">Historie servisu (${services.length})</span>
-          ${services.length ? (() => {
-            const totalCost = services.reduce((s, r) => s + (parseFloat(r.cost) || 0), 0);
-            return totalCost ? `<span style="font-size:.78rem;color:var(--text-muted)">Celkem: <strong style="color:var(--text)">${App.formatMoney(totalCost)}</strong></span>` : '';
-          })() : ''}
+          <div style="display:flex;gap:.75rem;align-items:center">
+            ${thisYearCost > 0 ? `<span style="font-size:.75rem;color:var(--text-muted)">${thisYear}: <strong style="color:var(--warning)">${App.formatMoney(thisYearCost)}</strong></span>` : ''}
+            ${services.length ? (() => {
+              const totalCost = services.reduce((s, r) => s + (parseFloat(r.cost) || 0), 0);
+              return totalCost ? `<span style="font-size:.78rem;color:var(--text-muted)">Celkem: <strong style="color:var(--text)">${App.formatMoney(totalCost)}</strong></span>` : '';
+            })() : ''}
+          </div>
         </div>
         ${services.length ? `
         <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
@@ -119,6 +154,7 @@ const Auto = (() => {
             <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
               ${s.cost ? `<span style="font-weight:600;font-size:.85rem">${App.formatMoney(s.cost)}</span>` : ''}
               <button class="btn btn-icon btn-ghost btn-sm" title="Přílohy" onclick="Docs.open('car_service','${s.id}','${App.esc(s.description || (SERVICE_CATS[s.category]?.label ?? 'Servis'))}')">📎</button>
+              <button class="btn btn-icon btn-ghost btn-sm" onclick="Auto.editService('${s.id}','${car.id}','${App.esc(car.name)}')">✏️</button>
               <button class="btn btn-icon btn-ghost btn-sm" onclick="Auto.deleteService('${s.id}')">🗑️</button>
             </div>
           </div>`).join('')}
@@ -370,11 +406,78 @@ const Auto = (() => {
     });
   }
 
+  async function editService(id, carId, carName) {
+    const { data: s } = await db.from('car_services').select('*').eq('id', id).single();
+    if (!s) return;
+    App.openModal(`✏️ Upravit servis — ${carName}`, `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Kategorie</label>
+          <select id="svc-cat" class="form-control">
+            ${Object.entries(SERVICE_CATS).map(([k, v]) => `<option value="${k}" ${s.category === k ? 'selected' : ''}>${v.emoji} ${v.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Popis</label>
+          <input id="svc-desc" class="form-control" value="${App.esc(s.description ?? '')}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input id="svc-date" type="date" class="form-control" value="${s.date ?? ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stav km</label>
+          <input id="svc-km" type="number" class="form-control" value="${s.mileage ?? ''}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Náklady (Kč)</label>
+          <input id="svc-cost" type="number" class="form-control" value="${s.cost ?? ''}">
+        </div>
+        <div class="form-group"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Poznámka</label>
+        <input id="svc-notes" class="form-control" value="${App.esc(s.notes ?? '')}">
+      </div>
+    `, {
+      saveLabel: 'Uložit',
+      onSave: async () => {
+        const { error } = await db.from('car_services').update({
+          category:    document.getElementById('svc-cat')?.value || 'ostatní',
+          description: document.getElementById('svc-desc')?.value.trim() || null,
+          date:        document.getElementById('svc-date')?.value || null,
+          mileage:     parseInt(document.getElementById('svc-km')?.value) || null,
+          cost:        parseFloat(document.getElementById('svc-cost')?.value) || null,
+          notes:       document.getElementById('svc-notes')?.value.trim() || null,
+        }).eq('id', id);
+        if (error) { App.toast('Chyba: ' + error.message, 'error'); return; }
+        App.toast('Uloženo ✓', 'success');
+        App.closeModal();
+        loadCars();
+      }
+    });
+  }
+
   async function deleteService(id) {
     if (!confirm('Smazat servisní záznam?')) return;
     await db.from('car_services').delete().eq('id', id);
     App.toast('Smazáno.', '');
     loadCars();
+  }
+
+  async function addToCalendar(type, carId, carName, date) {
+    if (!date) { App.toast('Datum není nastaveno.', 'error'); return; }
+    const titles = { stk: `🔧 STK — ${carName}`, pojisteni: `🛡️ Pojištění — ${carName}` };
+    const title = titles[type] ?? `🚗 ${carName}`;
+    const { error } = await db.from('family_events').insert({
+      title, date, type: 'jiné', notes: '', recurring: false, member_id: null,
+    });
+    if (error) { App.toast('Chyba: ' + error.message, 'error'); return; }
+    App.toast('Přidáno do kalendáře ✓', 'success');
   }
 
   // ── Palivo ───────────────────────────────────
@@ -510,5 +613,5 @@ const Auto = (() => {
     loadFuel();
   }
 
-  return { load, editCar, deleteCar, openAddService, deleteService, openAddFuel, deleteFuel };
+  return { load, editCar, deleteCar, openAddService, editService, deleteService, openAddFuel, deleteFuel, addToCalendar };
 })();
