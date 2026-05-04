@@ -27,6 +27,7 @@ const Pronajem = (() => {
     properties = data ?? [];
 
     if (!properties.length) {
+      document.getElementById('pronajem-summary').innerHTML = '';
       el.innerHTML = `<div class="empty-state">
         <div class="empty-icon">🏘️</div>
         <div class="empty-title">Žádné nemovitosti</div>
@@ -36,11 +37,77 @@ const Pronajem = (() => {
       return;
     }
 
+    loadSummary();
+
     el.innerHTML = '';
     for (const prop of properties) {
       if (gen !== _loadGen) return;
       el.appendChild(await renderProperty(prop));
     }
+  }
+
+  async function loadSummary() {
+    const el = document.getElementById('pronajem-summary');
+    if (!el) return;
+
+    const year = new Date().getFullYear();
+    const todayMonth = `${year}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    const activeTenants = properties.flatMap(p => (p.rental_tenants ?? []).filter(t => t.active));
+    const monthlyExpected = activeTenants.reduce((s, t) => s + (parseFloat(t.rent_amount) || 0), 0);
+    const totalDeposits = activeTenants.reduce((s, t) => s + (parseFloat(t.deposit) || 0), 0);
+
+    const tenantIds = activeTenants.map(t => t.id);
+    let paidThisYear = 0, unpaidAmount = 0;
+
+    if (tenantIds.length) {
+      const { data: payments } = await db.from('rental_payments').select('*')
+        .in('tenant_id', tenantIds).gte('month', `${year}-01`).lte('month', `${year}-12`);
+
+      const payMap = {};
+      (payments ?? []).forEach(p => { payMap[`${p.tenant_id}_${p.month}`] = p; });
+
+      const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
+      const pastMonths = months.filter(m => m <= todayMonth);
+
+      for (const t of activeTenants) {
+        for (const m of pastMonths) {
+          const p = payMap[`${t.id}_${m}`];
+          if (p?.paid) paidThisYear += parseFloat(p.amount) || 0;
+          else unpaidAmount += parseFloat(t.rent_amount) || 0;
+        }
+      }
+    }
+
+    const { data: repairs } = await db.from('rental_repairs').select('cost').neq('status', 'hotovo').not('cost', 'is', null);
+    const repairCost = (repairs ?? []).reduce((s, r) => s + (parseFloat(r.cost) || 0), 0);
+
+    el.innerHTML = `<div style="display:flex;gap:.625rem;flex-wrap:wrap;margin-bottom:1rem">
+      <div style="flex:1;min-width:120px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:10px;padding:.6rem .875rem">
+        <div style="font-size:.68rem;font-weight:600;color:#065f46;letter-spacing:.05em;margin-bottom:.2rem">↑ MĚSÍČNÍ PŘÍJEM</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#059669">${App.formatMoney(monthlyExpected)}</div>
+        <div style="font-size:.72rem;color:#065f46;margin-top:.1rem">${activeTenants.length} nájemník${activeTenants.length === 1 ? '' : activeTenants.length < 5 ? 'i' : 'ů'}</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:10px;padding:.6rem .875rem">
+        <div style="font-size:.68rem;font-weight:600;color:#1e3a5f;letter-spacing:.05em;margin-bottom:.2rem">💰 PŘIJATO ${year}</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#2563eb">${App.formatMoney(paidThisYear)}</div>
+        <div style="font-size:.72rem;color:#1e40af;margin-top:.1rem">z ${App.formatMoney(monthlyExpected * (new Date().getMonth() + 1))} očekávaných</div>
+      </div>
+      ${unpaidAmount > 0 ? `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-radius:10px;padding:.6rem .875rem">
+        <div style="font-size:.68rem;font-weight:600;color:#7f1d1d;letter-spacing:.05em;margin-bottom:.2rem">⚠️ DLUŽNÉ PLATBY</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#dc2626">${App.formatMoney(unpaidAmount)}</div>
+        <div style="font-size:.72rem;color:#b91c1c;margin-top:.1rem">nezaplacený nájem</div>
+      </div>` : ''}
+      ${totalDeposits > 0 ? `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,#faf5ff,#ede9fe);border:1px solid #c4b5fd;border-radius:10px;padding:.6rem .875rem">
+        <div style="font-size:.68rem;font-weight:600;color:#4c1d95;letter-spacing:.05em;margin-bottom:.2rem">🔒 KAUCE CELKEM</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#7c3aed">${App.formatMoney(totalDeposits)}</div>
+        <div style="font-size:.72rem;color:#6d28d9;margin-top:.1rem">ve správě</div>
+      </div>` : ''}
+      ${repairCost > 0 ? `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:10px;padding:.6rem .875rem">
+        <div style="font-size:.68rem;font-weight:600;color:#78350f;letter-spacing:.05em;margin-bottom:.2rem">🔧 OTEVŘENÉ OPRAVY</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#d97706">${App.formatMoney(repairCost)}</div>
+        <div style="font-size:.72rem;color:#b45309;margin-top:.1rem">odhadované náklady</div>
+      </div>` : ''}
+    </div>`;
   }
 
   async function renderProperty(prop) {
@@ -156,8 +223,9 @@ const Pronajem = (() => {
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
           <div>
             <span style="font-weight:600">👤 ${App.esc(tenant.name)}</span>
-            ${tenant.phone ? `<span style="color:var(--text-muted);font-size:.875rem"> · 📞 ${App.esc(tenant.phone)}</span>` : ''}
-            ${tenant.email ? `<span style="color:var(--text-muted);font-size:.875rem"> · ✉️ ${App.esc(tenant.email)}</span>` : ''}
+            ${tenant.phone ? `<span style="color:var(--text-muted);font-size:.875rem"> · 📞 <a href="tel:${App.esc(tenant.phone)}" style="color:inherit;text-decoration:none">${App.esc(tenant.phone)}</a></span>` : ''}
+            ${tenant.email ? `<span style="color:var(--text-muted);font-size:.875rem"> · <a href="mailto:${App.esc(tenant.email)}" style="color:var(--accent);text-decoration:none">✉️ ${App.esc(tenant.email)}</a></span>` : ''}
+            ${tenant.deposit ? `<span style="color:var(--text-muted);font-size:.8rem;margin-left:.375rem">· 🔒 kauce ${App.formatMoney(tenant.deposit)}</span>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:.5rem">
             <span style="font-weight:700;color:var(--success)">${App.formatMoney(tenant.rent_amount ?? 0)}/měs.</span>

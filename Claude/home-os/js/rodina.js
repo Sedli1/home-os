@@ -453,17 +453,21 @@ const Rodina = (() => {
         const age = today.getFullYear() - bd.getFullYear() - (today < new Date(today.getFullYear(), bd.getMonth(), bd.getDate()) ? 1 : 0);
         ageStr = `· <span class="age-badge" style="background:${(m.color??'#6366f1')}18;color:${(m.color??'#6366f1')};border:1.5px solid ${(m.color??'#6366f1')}44">${age} let</span>`;
       }
+      const notesHtml = m.contact_notes
+        ? `<div style="font-size:.78rem;color:var(--text-muted);margin-top:.25rem;white-space:pre-line;line-height:1.4">${App.esc(m.contact_notes)}</div>`
+        : '';
       return `<div class="card member-card" style="cursor:pointer" onclick="Rodina.showMemberDetail('${m.id}')">
-        <div class="card-body" style="display:flex;align-items:center;gap:1rem">
+        <div class="card-body" style="display:flex;align-items:flex-start;gap:1rem">
           <div style="width:48px;height:48px;border-radius:50%;background:${m.color ?? '#6366f1'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;flex-shrink:0">
             ${App.esc(m.name[0])}
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">${App.esc(m.name)} ${ageStr}</div>
             <div style="font-size:.8rem;color:var(--text-muted)">${App.esc(m.role ?? 'člen')}${m.birth_date ? ' · ' + App.formatDate(m.birth_date) : ''}</div>
-            ${m.phone ? `<div style="font-size:.8rem;color:var(--text-muted)">📞 ${App.esc(m.phone)}</div>` : ''}
+            ${m.phone ? `<div style="font-size:.82rem;margin-top:.2rem"><a href="tel:${App.esc(m.phone)}" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none">📞 ${App.esc(m.phone)}</a></div>` : ''}
+            ${notesHtml}
           </div>
-          <div style="display:flex;gap:.25rem" onclick="event.stopPropagation()">
+          <div style="display:flex;gap:.25rem;flex-shrink:0" onclick="event.stopPropagation()">
             <button class="btn btn-icon btn-ghost btn-sm" onclick="Rodina.editMember('${m.id}')">✏️</button>
             <button class="btn btn-icon btn-ghost btn-sm" onclick="Rodina.deleteMember('${m.id}')">🗑️</button>
           </div>
@@ -504,7 +508,7 @@ const Rodina = (() => {
       </div>
       <div style="display:flex;flex-direction:column;gap:.625rem;margin-bottom:1.25rem">
         ${m.birth_date ? `<div style="display:flex;gap:.5rem;align-items:center;font-size:.9rem"><span style="color:var(--text-muted)">🎂 Narozeniny</span> <strong>${App.formatDate(m.birth_date)}</strong></div>` : ''}
-        ${m.phone ? `<div style="display:flex;gap:.5rem;align-items:center;font-size:.9rem"><span style="color:var(--text-muted)">📞 Telefon</span> <strong>${App.esc(m.phone)}</strong></div>` : ''}
+        ${m.phone ? `<div style="display:flex;gap:.5rem;align-items:center;font-size:.9rem"><span style="color:var(--text-muted)">📞 Telefon</span> <a href="tel:${App.esc(m.phone)}" style="color:var(--accent);font-weight:600;text-decoration:none">${App.esc(m.phone)}</a></div>` : ''}
         ${m.contact_notes ? `<div style="font-size:.9rem;background:var(--surface2);padding:.625rem .875rem;border-radius:var(--radius)">${App.esc(m.contact_notes)}</div>` : ''}
       </div>
       <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🏥 Zdravotní záznamy</div>
@@ -541,8 +545,8 @@ const Rodina = (() => {
         <input id="mem-phone" class="form-control" placeholder="+420 777 000 000">
       </div>
       <div class="form-group">
-        <label class="form-label">Poznámky / kontakt</label>
-        <textarea id="mem-notes" class="form-control" rows="2" placeholder="Volitelně…"></textarea>
+        <label class="form-label">Poznámky & nápady na dárky</label>
+        <textarea id="mem-notes" class="form-control" rows="2" placeholder="Oblíbené barvy, koníčky, nápady na dárky…"></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Barva</label>
@@ -596,7 +600,7 @@ const Rodina = (() => {
         <input id="mem-phone" class="form-control" value="${App.esc(m.phone ?? '')}">
       </div>
       <div class="form-group">
-        <label class="form-label">Poznámky / kontakt</label>
+        <label class="form-label">Poznámky & nápady na dárky</label>
         <textarea id="mem-notes" class="form-control" rows="2">${App.esc(m.contact_notes ?? '')}</textarea>
       </div>
       <div class="form-group">
