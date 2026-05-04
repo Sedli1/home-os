@@ -48,6 +48,10 @@ const Rodina = (() => {
     return null;
   }
 
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   function getNameDayEvents(mems, todayStr, year) {
     const events = [];
     const seen = new Set();
@@ -59,10 +63,10 @@ const Rodina = (() => {
       if (seen.has(key)) return;
       seen.add(key);
       const nextDate = new Date(`${year}-${mmdd}T00:00:00`);
-      if (nextDate.toISOString().split('T')[0] < todayStr) {
+      if (localDateStr(nextDate) < todayStr) {
         nextDate.setFullYear(year + 1);
       }
-      const dateStr = nextDate.toISOString().split('T')[0];
+      const dateStr = localDateStr(nextDate);
       events.push({
         id: `nameday-${m.id}`,
         title: `Jmeniny — ${m.name}`,
@@ -86,7 +90,7 @@ const Rodina = (() => {
     for (const y of [year, year + 1]) {
       const dm = getNthWeekday(y, 4, 0, 2); // May = month index 4
       if (dm) {
-        const ds = dm.toISOString().split('T')[0];
+        const ds = localDateStr(dm);
         if (ds >= todayStr) { events.push({ id: `mothers-${y}`, title: '🌸 Den matek', date: ds, type: 'svátek', _synthetic: true }); break; }
       }
     }
@@ -94,7 +98,7 @@ const Rodina = (() => {
     for (const y of [year, year + 1]) {
       const df = getNthWeekday(y, 5, 0, 3); // June = month index 5
       if (df) {
-        const ds = df.toISOString().split('T')[0];
+        const ds = localDateStr(df);
         if (ds >= todayStr) { events.push({ id: `fathers-${y}`, title: '👨 Den otců', date: ds, type: 'svátek', _synthetic: true }); break; }
       }
     }
@@ -134,7 +138,7 @@ const Rodina = (() => {
     el.innerHTML = '<div class="loading"><div class="spinner"></div> Načítám…</div>';
 
     const today = new Date(); today.setHours(0,0,0,0);
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = localDateStr(today);
 
     const [{ data: evData, error }, { data: mems }] = await Promise.all([
       db.from('family_events')
@@ -152,7 +156,7 @@ const Rodina = (() => {
     (mems ?? []).forEach(m => {
       const bd = new Date(m.birth_date + 'T00:00:00');
       const next = nextOccurrence(bd);
-      const nextStr = next.toISOString().split('T')[0];
+      const nextStr = localDateStr(next);
       if (nextStr >= todayStr) {
         synthetic.push({
           id: 'bday-' + m.id,
@@ -239,7 +243,7 @@ const Rodina = (() => {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Datum *</label>
-          <input id="ev-date" type="date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+          <input id="ev-date" type="date" class="form-control" value="${localDateStr(new Date())}">
         </div>
         <div class="form-group">
           <label class="form-label">Typ</label>
