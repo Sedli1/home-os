@@ -698,6 +698,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .payment-cell.paid { background: #dcfce7; color: #166534; border-color: #86efac; }
 .payment-cell.unpaid { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
 .payment-cell.future { background: var(--surface2); color: var(--text-light); border-color: var(--border); }
+.payment-cell.na { background: transparent; color: var(--text-light); border-color: transparent; opacity: .35; cursor: default; pointer-events: none; }
 
 /* ── Car card ─────────────────────────────────── */
 .car-card {

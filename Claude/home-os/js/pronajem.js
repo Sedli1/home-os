@@ -70,7 +70,11 @@ const Pronajem = (() => {
       const pastMonths = months.filter(m => m <= todayMonth);
 
       for (const t of activeTenants) {
+        const tStart = t.contract_start ? t.contract_start.substring(0, 7) : null;
+        const tEnd   = t.contract_end   ? t.contract_end.substring(0, 7)   : null;
         for (const m of pastMonths) {
+          if (tStart && m < tStart) continue;
+          if (tEnd   && m > tEnd)   continue;
           const p = payMap[`${t.id}_${m}`];
           if (p?.paid) paidThisYear += parseFloat(p.amount) || 0;
           else unpaidAmount += parseFloat(t.rent_amount) || 0;
@@ -142,10 +146,15 @@ const Pronajem = (() => {
       return `${year}-${m}`;
     });
 
-    // Zjistit dlužné měsíce
+    // Začátek a konec nájmu — jen YYYY-MM část
+    const contractStart = tenant?.contract_start ? tenant.contract_start.substring(0, 7) : null;
+    const contractEnd   = tenant?.contract_end   ? tenant.contract_end.substring(0, 7)   : null;
+
+    // Zjistit dlužné měsíce — jen v rozsahu platné smlouvy
     const overdueMonths = months.filter(month => {
-      const isFuture = month > todayStr;
-      if (isFuture) return false;
+      if (month > todayStr) return false;
+      if (contractStart && month < contractStart) return false;
+      if (contractEnd   && month > contractEnd)   return false;
       const p = payMap[month];
       return !p?.paid;
     });
@@ -153,14 +162,20 @@ const Pronajem = (() => {
     const payGrid = months.map(month => {
       const p = payMap[month];
       const monthNum = parseInt(month.split('-')[1]);
-      const isFuture = month > todayStr;
+      const isFuture        = month > todayStr;
+      const isBeforeContract = contractStart && month < contractStart;
+      const isAfterContract  = contractEnd   && month > contractEnd;
+      const isNA = isBeforeContract || isAfterContract;
       let cls;
-      if (isFuture)      cls = 'future';
+      if (isNA)          cls = 'na';
+      else if (isFuture) cls = 'future';
       else if (p?.paid)  cls = 'paid';
       else               cls = 'unpaid';
-      const title = `${monthNum}/${year}${p?.paid ? ' — zaplaceno' : isFuture ? '' : ' — NEZAPLACENO'}`;
+      const title = isBeforeContract ? `${monthNum}/${year} — před nájmem`
+                  : isAfterContract  ? `${monthNum}/${year} — po skončení nájmu`
+                  : `${monthNum}/${year}${p?.paid ? ' — zaplaceno' : isFuture ? '' : ' — NEZAPLACENO'}`;
       return `<div class="payment-cell ${cls}" title="${title}"
-        onclick="Pronajem.togglePayment('${tenant?.id ?? ''}','${month}',${p?.paid ? 'true' : 'false'},'${p?.id ?? ''}')"
+        ${isNA ? '' : `onclick="Pronajem.togglePayment('${tenant?.id ?? ''}','${month}',${p?.paid ? 'true' : 'false'},'${p?.id ?? ''}')"`}
         data-month="${month}">${monthNum}</div>`;
     }).join('');
 
