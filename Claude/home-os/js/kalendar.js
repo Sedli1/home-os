@@ -199,16 +199,22 @@ const Kalendar = (() => {
 
     // ── Paralelní fetch ze všech modulů ──────────
     const [
-      { data: dbEvents   },
-      { data: members    },
-      { data: health     },
-      { data: cars       },
-      { data: contracts  },
+      { data: dbEvents      },
+      { data: recurringEvs  },
+      { data: members       },
+      { data: health        },
+      { data: cars          },
+      { data: contracts     },
     ] = await Promise.all([
       db.from('family_events')
         .select('*, family_members(name,color)')
+        .eq('recurring', false)
         .gte('date', fromStr)
         .lte('date', toStr),
+
+      db.from('family_events')
+        .select('*, family_members(name,color)')
+        .eq('recurring', true),
 
       db.from('family_members')
         .select('*'),
@@ -227,7 +233,7 @@ const Kalendar = (() => {
     // ── Sestavení eventMap ─────────────────────────
     const eventMap = {};
 
-    // 1. Události z family_events
+    // 1. Události z family_events (nerekurentní, v rozsahu měsíce)
     (dbEvents ?? []).forEach(ev => {
       if (!ev.date) return;
       addEvent(eventMap, ev.date, {
@@ -236,23 +242,41 @@ const Kalendar = (() => {
         color:  eventColor(ev.type ?? 'jiné'),
         notes:  ev.notes,
         source: 'event',
-        raw:    ev,
+        id:     ev.id,
       });
     });
 
-    // 2. Narozeniny + jmeniny členů rodiny
+    // 1b. Opakující se události — přepočítej na aktuální rok
+    (recurringEvs ?? []).forEach(ev => {
+      if (!ev.date) return;
+      const parts = ev.date.split('-');
+      if (parts.length !== 3) return;
+      const key = `${currentYear}-${parts[1]}-${parts[2]}`;
+      addEvent(eventMap, key, {
+        title:  ev.title,
+        type:   ev.type ?? 'jiné',
+        color:  eventColor(ev.type ?? 'jiné'),
+        notes:  ev.notes,
+        source: 'event',
+        id:     ev.id,
+      });
+    });
+
+    // 2. Narozeniny + jmeniny členů rodiny (syntetické, vždy pro aktuální rok)
     (members ?? []).forEach(member => {
       if (!member.name) return;
       const fn = firstName(member.name);
       const memberColor = member.color ?? eventColor('narozeniny');
 
-      // Narozeniny — hledáme birthdate ve formátu YYYY-MM-DD
-      if (member.birthdate) {
-        const bParts = member.birthdate.split('-');
+      // Narozeniny — pole je birth_date ve formátu YYYY-MM-DD
+      if (member.birth_date) {
+        const bParts = member.birth_date.split('-');
         if (bParts.length === 3) {
           const bKey = `${currentYear}-${bParts[1]}-${bParts[2]}`;
+          const birthYear = parseInt(bParts[0]);
+          const age = currentYear - birthYear;
           addEvent(eventMap, bKey, {
-            title:  `🎂 Narozeniny — ${member.name}`,
+            title:  `🎂 Narozeniny — ${member.name}${age > 0 ? ` (${age} let)` : ''}`,
             type:   'narozeniny',
             color:  memberColor,
             notes:  '',
